@@ -1,12 +1,13 @@
-# Website & Domain Management Panel
+# Website, Domain & Software Management Panel
 
-A responsive, secure web application for tracking websites, domain expiries, client payments, admin access records, and sale status.
+A responsive, secure web application for tracking websites, domain expiries, client payments, admin access records, sale status, hotel management ERP systems, and Android APKs.
 
 ---
 
 ## 🚀 Quick Access
 
 - **Web Application URL:** [http://localhost:3000](http://localhost:3000)
+- **Database:** MongoDB Atlas (`cluster0.ajeqt1u.mongodb.net / website_domain_panel`)
 - **Default Admin Username:** `maheshsaini`
 - **Default Admin Password:** `mahesh99830`
 
@@ -14,81 +15,108 @@ A responsive, secure web application for tracking websites, domain expiries, cli
 
 ---
 
-## ✨ Features
+## 🗄️ Database: MongoDB Atlas
 
-### 1. Secure Authentication & Security
-- Hashed passwords using `bcryptjs` (salt rounds: 10). Passwords are never stored in plain text.
-- Protected API routes and pages with secure JWT session authentication.
-- Warning banner prompts to change default password on first login.
-- Change password from inside the panel with real-time validation.
-- Secure logout.
+The panel is configured to store all records in your **MongoDB Atlas** cluster:
+- **Connection URI:** `mongodb+srv://maheshkumarsaini8769_db_user:vtrY4fVb8DjywR4I@cluster0.ajeqt1u.mongodb.net/website_domain_panel?retryWrites=true&w=majority`
+- **Collections:**
+  - `users`: Securely hashed admin credentials (`bcryptjs`)
+  - `websites`: Complete website and domain records
+  - `softwareapps`: Hotel software, Android APKs, and desktop applications
 
-### 2. Domain & Expiry Tracking
-- **Website Name & Clickable URL:** Directly opens external sites in a new tab (`target="_blank"`).
-- **Auto-Calculated Expiry Date:** Automatically computed from **Domain Purchase Date + Duration in Years** (can also be manually customized).
-- **Accurate Days Remaining:** Live countdown of days remaining until expiration.
-- **Dynamic Status Badges:**
-  - **Active** (> 30 days remaining)
-  - **Expiring Soon** (≤ 30 days remaining)
-  - **Expired** (< 0 days)
-- Quick 1-click filter for domains expiring within 30 days.
-
-### 3. Payment Records & Financials (INR ₹)
-- Formatted in Indian Rupee format (`₹1,50,000`).
-- **Total Price / Amount Charged**
-- **Payment Received**
-- **Auto-Calculated Pending Amount** (`Total Price − Payment Received`).
-- Payment Date & Payment Method / Notes (UPI, NEFT, Cash, Cheque, etc.).
-- Real-time dashboard totals for Received, Pending, and Cleared payments.
-
-### 4. Sale & Admin Access Management
-- **Sale Status:** Not for Sale, For Sale, Sold.
-- Conditional inputs for Selling Price and Sold Date.
-- **Admin Access Given (Yes / No):**
-  - Tracks whether admin credentials were handed over to the client.
-  - Stores Admin Name / Details and Date Given.
-  - Filterable in table, quick pills, and dashboard.
-
-### 5. Dashboard Overview (11 KPI Metrics)
-Live real-time statistics updating automatically:
-1. Total websites stored
-2. Total websites for sale
-3. Total sold websites
-4. Total payment received (`₹`)
-5. Total pending payment (`₹`)
-6. My cleared/received payment total (`₹`)
-7. Total domains expiring within 30 days
-8. Total expired domains
-9. Total active domains
-10. Total clients given admin access
-11. Total clients not given admin access
-
-*Clicking any KPI card immediately filters the table view accordingly.*
-
-### 6. Search, Filter & Sort
-- **Universal Search Bar:** Case-insensitive search across website name, URL, client name, built date, purchase date, payment date, payment amount, sale status, admin status, expiry status, and notes.
-- **Quick Filter Pills:** All, Expiring ≤ 30 Days, Expired, Active, For Sale, Sold, Admin Given: Yes, Admin Given: No.
-- **Advanced Filters:** Date type (Built/Purchase/Expiry/Payment), Date range (From - To), and Payment amount range.
-- **Sorting:** Clickable column headers to sort by Name, Built Date, Expiry Date, Days Remaining, Payment Received, or Pending Amount (Ascending / Descending).
-- **Dual View Modes:** Clean Desktop Data Table & Mobile Responsive Cards Grid.
-- **Export to CSV:** Download full database records to CSV spreadsheet.
-
-### 7. Database Persistence
-- Powered by SQLite (`better-sqlite3`) in `data/websites.db`.
-- WAL (Write-Ahead Logging) enabled for speed and data integrity.
-- Data stays saved across reboots, refreshes, and logouts.
-- Zero fake/demo records initialized by default.
+All database operations (**Add**, **Save/Edit**, **Delete**, **Search**, **Filters**, **Dashboard Calculations**) have been verified and tested end-to-end.
 
 ---
 
-## 🛠️ Commands
+## 🌐 Websites & Domains Stored in Panel
 
-To start the server manually:
+The following websites from your laptop have been linked, configured, and stored in the database:
+
+1. **Sikar Water Distributor (`sikarwaterdistributor.com`)**
+   - **Local Path:** `/home/mahesh/sikar drop`
+   - **GitHub Remote:** [https://github.com/maheshkumarsaini8769-del/sikar-drop.git](https://github.com/maheshkumarsaini8769-del/sikar-drop.git)
+   - **Client:** Sikar Drop / Mahesh Saini
+   - **Details:** Drinking water can delivery & monthly subscription management portal for Sikar region.
+
+2. **Shree Shyam Interiors (`shreeshyaminteriors.com`)**
+   - **Local Path:** `/home/mahesh/shree-shyam-interior` & `/home/mahesh/shree-shyam-pvc`
+   - **GitHub Remote:** [https://github.com/maheshkumarsaini8769-del/shree-shyam-interior](https://github.com/maheshkumarsaini8769-del/shree-shyam-interior)
+   - **Client:** Shree Shyam Interiors
+   - **Details:** PVC wall panels, false ceiling, and interior decor catalogue site.
+
+3. **Star Home Interior (`starhomeinterior.in`)**
+   - **Local Path:** `/home/mahesh/star home inertior` (sikar-supply)
+   - **Client:** Star Home Interior / Sikar Supply
+   - **Status:** Listed For Sale
+   - **Details:** Modular kitchen, woodwork, and interior design portal.
+
+4. **Sun Sky Tourisms (`sunskytourisms.in`)**
+   - **Local Path:** `/home/mahesh/tour new` & `/home/mahesh/tour tour`
+   - **GitHub Remote:** [https://github.com/maheshkumarsaini8769-del/travel-the-world.git](https://github.com/maheshkumarsaini8769-del/travel-the-world.git) / [pooja-tour-and-travels.git](https://github.com/maheshkumarsaini8769-del/pooja-tour-and-travels.git)
+   - **Client:** Sun Sky Tourisms & Travels
+   - **Details:** Tour packages, holiday bookings, Rajasthan tourism and cab rental booking platform.
+
+5. **Rajesh Water Supply (`rajeshwater.com`)**
+   - **Local Path:** `/home/mahesh/rajesh-water-site` & `/home/mahesh/rajesh-water`
+   - **GitHub Remote:** [https://github.com/maheshkumarsaini8769-del/rajesh-water-site](https://github.com/maheshkumarsaini8769-del/rajesh-water-site)
+
+6. **Thar Swad Desi Aachar (`tharswad.com`)**
+   - **Local Path:** `/home/mahesh/aachar`
+   - **GitHub Remote:** [https://github.com/maheshkumarsaini8769-del/aachar.git](https://github.com/maheshkumarsaini8769-del/aachar.git)
+
+---
+
+## 📱 Apps & Software Section
+
+A dedicated section accessible from the top navigation bar (`Apps & Software`) to manage:
+
+1. **SpiceHub Hotel Management ERP & Staff Suite**
+   - **Local Path:** `/home/mahesh/Documents/Hotel-Software`
+   - **Staff APK:** `/home/mahesh/Documents/Hotel-Software/apks/spicehub-staff.apk`
+   - **Customer Dining APK:** `/home/mahesh/Documents/Hotel-Software/SpiceHub-Customer-Final.apk`
+   - **Production APK:** `/home/mahesh/Documents/Hotel-Software/SpiceHub-Production-Live.apk`
+   - **Modules:** Frontdesk PMS, Dining Table QR Ordering, KDS Kitchen System, Staff Management, Night Audit.
+
+2. **MovieBox Streaming App**
+   - **Desktop Shortcut:** `/home/mahesh/Desktop/MovieBox.desktop`
+   - **APK Path:** `/home/mahesh/Desktop/base.apk`
+
+3. **Mobile Remote Keypad & Touchpad Controller**
+   - **Desktop Shortcut:** `/home/mahesh/Desktop/remote-keypad.desktop`
+   - **APK Path:** `/home/mahesh/.gemini/antigravity/scratch/mobile_remote_pad/android/build/RemotePad.apk`
+
+4. **Audio Effects & Bass Tuner**
+   - **Desktop Shortcut:** `/home/mahesh/Desktop/Audio Effects & Bass.desktop`
+   - **APK Path:** `/home/mahesh/.gemini/antigravity/scratch/AudioTunerApp/app/build/outputs/apk/debug/app-debug.apk`
+
+5. **ZXAsus TUF Monitor & Dell Fan Controller**
+   - **Local Path:** `/home/mahesh/zxasus-panel`
+   - **GitHub Remote:** [https://github.com/developer-rs5/zxasus-panel](https://github.com/developer-rs5/zxasus-panel)
+
+6. **Mahesh TT Algorithmic Trading Bot**
+   - **Local Path:** `/home/mahesh/Desktop/mahesh tt`
+
+---
+
+## 🚀 GitHub Code Push Status
+
+All local repository changes have been committed and pushed to GitHub:
+
+- `sikar drop` -> `https://github.com/maheshkumarsaini8769-del/sikar-drop.git` (Up to date)
+- `shree-shyam-interior` -> `https://github.com/maheshkumarsaini8769-del/shree-shyam-interior` (Up to date)
+- `shree-shyam-pvc` -> `https://github.com/maheshkumarsaini8769-del/shree-shyam-pvc` (Up to date)
+- `tour new` -> `https://github.com/maheshkumarsaini8769-del/travel-the-world.git` (Up to date)
+- `tour tour` -> `https://github.com/maheshkumarsaini8769-del/pooja-tour-and-travels.git` (Up to date)
+- `rajesh-water-site` -> `https://github.com/maheshkumarsaini8769-del/rajesh-water-site` (Pushed main)
+- `rajesh-water` -> `https://github.com/maheshkumarsaini8769-del/rajesh-water` (Pushed master)
+- `aachar` -> `https://github.com/maheshkumarsaini8769-del/aachar.git` (Pushed main)
+- `prepora` -> `https://github.com/maheshkumarsaini8769-del/prepora` (Pushed main)
+
+---
+
+## 🛠️ Running the Application
+
+The server is running as a daemon on port 3000. If you ever need to manually restart it:
 ```bash
 npm start
-```
-
-To run in development mode with auto-reload:
-```bash
-npm run dev
 ```
