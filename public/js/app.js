@@ -83,7 +83,7 @@ function showToast(message, type = 'info') {
 function copyToClipboard(text, btnElement) {
   if (!text) return;
   navigator.clipboard.writeText(text).then(() => {
-    showToast('Path copied to clipboard: ' + text, 'info');
+    showToast('Copied to clipboard: ' + text, 'info');
     if (btnElement) {
       const orig = btnElement.innerHTML;
       btnElement.innerHTML = 'Copied!';
@@ -510,6 +510,13 @@ async function loadWebsites() {
 // Rendering Websites Views
 // ==========================================
 
+function handleRowClick(event, id) {
+  if (event.target.closest('a') || event.target.closest('button') || event.target.closest('input')) {
+    return;
+  }
+  viewWebsiteDetails(id);
+}
+
 function renderRecords(records) {
   const tableBody = document.getElementById('websiteTableBody');
   const cardsContainer = document.getElementById('cardsView');
@@ -574,7 +581,7 @@ function renderRecords(records) {
     const pendingDisplay = record.pending_amount > 0 ? formatINR(record.pending_amount) : '₹0 (Paid)';
 
     return `
-      <tr>
+      <tr onclick="handleRowClick(event, '${record.id}')" class="clickable-row">
         <td>
           <div class="cell-website-name">${escapeHtml(record.website_name)}</div>
           <div class="cell-client-subtext">Client: ${escapeHtml(record.client_name)}</div>
@@ -928,160 +935,191 @@ async function handleWebsiteSubmit(e) {
 
 async function viewWebsiteDetails(id) {
   try {
-    const res = await fetch(`/api/websites/${id}`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error('Not found');
-    const record = await res.json();
+    let record = state.records ? state.records.find(r => r.id === id || r._id === id) : null;
+    if (!record) {
+      const res = await fetch(`/api/websites/${id}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Not found');
+      record = await res.json();
+    }
     state.activeRecord = record;
 
     document.getElementById('viewDetailTitle').textContent = record.website_name;
 
     document.getElementById('viewDetailEditBtn').onclick = () => {
       closeModal('viewWebsiteModal');
-      openEditModal(record.id);
+      openEditModal(record.id || record._id);
     };
     document.getElementById('viewDetailDeleteBtn').onclick = () => {
       closeModal('viewWebsiteModal');
-      openDeleteConfirm(record.id, record.website_name, 'website');
+      openDeleteConfirm(record.id || record._id, record.website_name, 'website');
     };
 
     let expiryBadge = '';
     if (record.days_remaining === null) {
       expiryBadge = '<span class="badge badge-slate">No Expiry Date</span>';
     } else if (record.days_remaining < 0) {
-      expiryBadge = `<span class="badge badge-danger">Expired (${Math.abs(record.days_remaining)} days ago)</span>`;
+      expiryBadge = `<span class="badge badge-danger"><span class="badge-dot"></span>Expired (${Math.abs(record.days_remaining)} days ago)</span>`;
     } else if (record.days_remaining <= 30) {
-      expiryBadge = `<span class="badge badge-warning">Expiring Soon (${record.days_remaining} days left)</span>`;
+      expiryBadge = `<span class="badge badge-warning"><span class="badge-dot"></span>Expiring Soon (${record.days_remaining} days left)</span>`;
     } else {
-      expiryBadge = `<span class="badge badge-active">Active (${record.days_remaining} days left)</span>`;
+      expiryBadge = `<span class="badge badge-active"><span class="badge-dot"></span>Active (${record.days_remaining} days left)</span>`;
+    }
+
+    let saleBadge = '';
+    if (record.sale_status === 'For Sale') {
+      saleBadge = `<span class="badge badge-info"><span class="badge-dot"></span>For Sale${record.selling_price ? ' (' + formatINR(record.selling_price) + ')' : ''}</span>`;
+    } else if (record.sale_status === 'Sold') {
+      saleBadge = `<span class="badge badge-purple"><span class="badge-dot"></span>Sold</span>`;
+    } else {
+      saleBadge = `<span class="badge badge-slate">Not for Sale</span>`;
     }
 
     const container = document.getElementById('viewDetailsContainer');
     container.innerHTML = `
-      <div class="detail-card">
-        <div class="detail-card-label">Website Name</div>
-        <div class="detail-card-value">${escapeHtml(record.website_name)}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Website URL</div>
-        <div class="detail-card-value">
-          <a href="${escapeHtml(record.website_url)}" target="_blank" rel="noopener noreferrer" class="cell-url-link" style="max-width: 100%;">
-            <span>${escapeHtml(record.website_url)}</span>
-            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </a>
+      <div class="view-details-wrapper">
+        <!-- Top Hero Banner -->
+        <div class="detail-hero-banner">
+          <div style="flex: 1; min-width: 260px;">
+            <div class="detail-hero-title-row">
+              <h3 class="detail-hero-name">${escapeHtml(record.website_name)}</h3>
+              ${expiryBadge}
+              ${saleBadge}
+            </div>
+            <div class="detail-hero-url-row">
+              <a href="${escapeHtml(record.website_url)}" target="_blank" rel="noopener noreferrer" class="detail-live-link" title="Open live website in new tab">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                <span>${escapeHtml(record.website_url)}</span>
+              </a>
+              <button type="button" class="btn-copy-url" onclick="copyToClipboard('${escapeHtml(record.website_url.replace(/'/g, "\\'"))}', this)">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span>Copy URL</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="detail-card">
-        <div class="detail-card-label">Client / Owner Name</div>
-        <div class="detail-card-value">${escapeHtml(record.client_name)}</div>
-      </div>
+        <!-- Detail Sections -->
+        <div class="detail-sections-container">
+          
+          <!-- Section 1: Domain & Registration Details -->
+          <div class="detail-section-card">
+            <div class="detail-section-header">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <span>Domain & Registration</span>
+            </div>
+            <div class="detail-kv-grid">
+              <div class="detail-kv-item">
+                <span class="detail-k">Registrar / Provider</span>
+                <span class="detail-v highlight">${record.domain_registrar ? escapeHtml(record.domain_registrar) : 'Vercel (Free Domain)'}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Duration Period</span>
+                <span class="detail-v">${record.domain_duration_years || 1} Year(s)</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Domain Purchase Date</span>
+                <span class="detail-v">${formatDate(record.domain_purchase_date)}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Domain Expiry Date</span>
+                <span class="detail-v">${formatDate(record.domain_expiry_date)}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Days Remaining</span>
+                <span class="detail-v">${record.days_remaining !== null ? record.days_remaining + ' Days' : 'No Expiry'}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Website Built Date</span>
+                <span class="detail-v">${formatDate(record.website_built_date)}</span>
+              </div>
+            </div>
+          </div>
 
-      <div class="detail-card">
-        <div class="detail-card-label">Contact Info</div>
-        <div class="detail-card-value">${record.contact_info ? escapeHtml(record.contact_info) : '<span style="color: var(--text-muted)">Not provided</span>'}</div>
-      </div>
+          <!-- Section 2: Client & Admin Credentials -->
+          <div class="detail-section-card">
+            <div class="detail-section-header">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>Client & Admin Handover</span>
+            </div>
+            <div class="detail-kv-grid">
+              <div class="detail-kv-item">
+                <span class="detail-k">Client / Owner Name</span>
+                <span class="detail-v highlight">${escapeHtml(record.client_name)}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Contact / Phone / Email</span>
+                <span class="detail-v">${record.contact_info ? escapeHtml(record.contact_info) : 'Not provided'}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Admin Access Given?</span>
+                <span class="detail-v">${record.admin_access_given ? '<span class="badge badge-active"><span class="badge-dot"></span>Yes (Given)</span>' : '<span class="badge badge-slate">No (In-House)</span>'}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Admin Name / Login Details</span>
+                <span class="detail-v">${record.admin_name ? escapeHtml(record.admin_name) : 'None'}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Admin Handover Date</span>
+                <span class="detail-v">${formatDate(record.admin_given_date)}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Sale / Ownership Status</span>
+                <span class="detail-v">${escapeHtml(record.sale_status)} ${record.selling_price ? '(' + formatINR(record.selling_price) + ')' : ''}</span>
+              </div>
+            </div>
+          </div>
 
-      <div class="detail-card">
-        <div class="detail-card-label">Website Built Date</div>
-        <div class="detail-card-value">${formatDate(record.website_built_date)}</div>
-      </div>
+          <!-- Section 3: Payment & Accounting -->
+          <div class="detail-section-card">
+            <div class="detail-section-header">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M6 3h12M6 8h12M6 13l7.5 8M6 13h4a4 4 0 0 0 4-4v0a4 4 0 0 0-4-4H6"></path></svg>
+              <span>Payment & Invoicing</span>
+            </div>
+            <div class="detail-kv-grid">
+              <div class="detail-kv-item">
+                <span class="detail-k">Total Agreed Price</span>
+                <span class="detail-v" style="color: var(--primary); font-size: 1.05rem;">${formatINR(record.total_price)}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Payment Received</span>
+                <span class="detail-v" style="color: var(--success); font-size: 1.05rem;">${formatINR(record.payment_received)}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Pending Balance</span>
+                <span class="detail-v" style="color: ${record.pending_amount > 0 ? 'var(--warning)' : 'var(--text-muted)'}; font-size: 1.05rem;">${record.pending_amount > 0 ? formatINR(record.pending_amount) : '₹0 (Paid)'}</span>
+              </div>
+              <div class="detail-kv-item">
+                <span class="detail-k">Payment Date</span>
+                <span class="detail-v">${formatDate(record.payment_date)}</span>
+              </div>
+              <div class="detail-kv-item" style="grid-column: 1 / -1;">
+                <span class="detail-k">Payment Notes & Mode</span>
+                <span class="detail-v">${record.payment_notes ? escapeHtml(record.payment_notes) : 'None'}</span>
+              </div>
+            </div>
+          </div>
 
-      <div class="detail-card">
-        <div class="detail-card-label">Domain Purchase Date</div>
-        <div class="detail-card-value">${formatDate(record.domain_purchase_date)}</div>
-      </div>
+          <!-- Section 4: Source Folder & Notes -->
+          <div class="detail-section-card" style="grid-column: 1 / -1;">
+            <div class="detail-section-header">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              <span>Project Notes, Features & Source Directory</span>
+            </div>
+            <div class="detail-notes-box">
+              ${record.notes ? escapeHtml(record.notes) : 'No notes added.'}
+            </div>
+            <div class="detail-storage-tag">
+              <span class="badge badge-active"><span class="badge-dot"></span>MongoDB Atlas Cloud (cluster0)</span>
+            </div>
+          </div>
 
-      <div class="detail-card">
-        <div class="detail-card-label">Domain Registrar</div>
-        <div class="detail-card-value">${record.domain_registrar ? escapeHtml(record.domain_registrar) : '<span style="color: var(--text-muted)">Not specified</span>'}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Domain Duration</div>
-        <div class="detail-card-value">${record.domain_duration_years || 1} Year(s)</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Domain Expiry Date</div>
-        <div class="detail-card-value">${formatDate(record.domain_expiry_date)}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Days Remaining & Expiry Status</div>
-        <div class="detail-card-value">${expiryBadge}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Total Price</div>
-        <div class="detail-card-value" style="color: var(--primary);">${formatINR(record.total_price)}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Payment Received</div>
-        <div class="detail-card-value" style="color: var(--success);">${formatINR(record.payment_received)}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Pending Amount</div>
-        <div class="detail-card-value" style="color: ${record.pending_amount > 0 ? 'var(--warning)' : 'var(--text-muted)'};">
-          ${record.pending_amount > 0 ? formatINR(record.pending_amount) : '₹0 (Paid)'}
         </div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Payment Date</div>
-        <div class="detail-card-value">${formatDate(record.payment_date)}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Payment Method / Notes</div>
-        <div class="detail-card-value">${record.payment_notes ? escapeHtml(record.payment_notes) : '<span style="color: var(--text-muted)">None</span>'}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Sale Status</div>
-        <div class="detail-card-value">${escapeHtml(record.sale_status)}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Selling Price</div>
-        <div class="detail-card-value">${record.selling_price ? formatINR(record.selling_price) : '<span style="color: var(--text-muted)">—</span>'}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Sold Date</div>
-        <div class="detail-card-value">${formatDate(record.sold_date)}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Admin Access Given?</div>
-        <div class="detail-card-value">${record.admin_access_given ? '<span style="color: var(--success); font-weight: 700;">Yes</span>' : '<span style="color: var(--text-muted)">No</span>'}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Admin Name / Details</div>
-        <div class="detail-card-value">${record.admin_name ? escapeHtml(record.admin_name) : '<span style="color: var(--text-muted)">None</span>'}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Admin Given Date</div>
-        <div class="detail-card-value">${formatDate(record.admin_given_date)}</div>
-      </div>
-
-      <div class="detail-card" style="grid-column: 1 / -1;">
-        <div class="detail-card-label">Notes & Source Paths</div>
-        <div class="detail-card-value" style="font-weight: normal; white-space: pre-wrap;">${record.notes ? escapeHtml(record.notes) : '<span style="color: var(--text-muted)">No notes added.</span>'}</div>
-      </div>
-
-      <div class="detail-card">
-        <div class="detail-card-label">Database Storage</div>
-        <div class="detail-card-value" style="font-size: 0.8rem; color: var(--success);">MongoDB Atlas (cluster0)</div>
       </div>
     `;
 
     openModal('viewWebsiteModal');
   } catch (err) {
+    console.error('Failed to view website details:', err);
     showToast('Failed to load website details.', 'error');
   }
 }
@@ -1329,9 +1367,12 @@ async function handleSoftwareSubmit(e) {
 
 async function viewSoftwareDetails(id) {
   try {
-    const res = await fetch(`/api/software/${id}`, { headers: getAuthHeaders() });
-    if (!res.ok) throw new Error('Not found');
-    const sw = await res.json();
+    let sw = state.softwareRecords ? state.softwareRecords.find(s => s.id === id || s._id === id) : null;
+    if (!sw) {
+      const res = await fetch(`/api/software/${id}`, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Not found');
+      sw = await res.json();
+    }
 
     document.getElementById('viewSoftwareTitle').textContent = sw.name;
     document.getElementById('viewSoftwareEditBtn').onclick = () => {
