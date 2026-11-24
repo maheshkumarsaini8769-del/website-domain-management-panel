@@ -547,14 +547,14 @@ function renderRecords(records) {
   tableBody.innerHTML = records.map(record => {
     let expiryBadge = '';
     if (record.days_remaining === null) {
-      expiryBadge = '<span class="badge badge-slate">No Expiry Date</span>';
+      expiryBadge = '<span class="badge badge-slate">No Expiry</span>';
     } else if (record.days_remaining < 0) {
       const daysAgo = Math.abs(record.days_remaining);
-      expiryBadge = `<span class="badge badge-danger"><span class="badge-dot"></span>Expired (${daysAgo}d ago)</span>`;
+      expiryBadge = `<span class="badge badge-danger"><span class="badge-dot"></span>Expired (${daysAgo}d)</span>`;
     } else if (record.days_remaining <= 30) {
-      expiryBadge = `<span class="badge badge-warning"><span class="badge-dot"></span>Expiring (${record.days_remaining}d left)</span>`;
+      expiryBadge = `<span class="badge badge-warning"><span class="badge-dot"></span>Expiring (${record.days_remaining}d)</span>`;
     } else {
-      expiryBadge = `<span class="badge badge-active"><span class="badge-dot"></span>Active (${record.days_remaining}d left)</span>`;
+      expiryBadge = `<span class="badge badge-active"><span class="badge-dot"></span>Active (${record.days_remaining}d)</span>`;
     }
 
     let saleBadge = '';
@@ -588,7 +588,7 @@ function renderRecords(records) {
         <td>${formatDate(record.website_built_date)}</td>
         <td>
           <div>${formatDate(record.domain_purchase_date)}</div>
-          <div class="cell-client-subtext">${record.domain_duration_years || 1} yr${(record.domain_duration_years > 1) ? 's' : ''} ${record.domain_registrar ? '• ' + escapeHtml(record.domain_registrar) : ''}</div>
+          <div class="cell-client-subtext cell-registrar-text" title="${record.domain_registrar ? escapeHtml(record.domain_registrar) : ''}">${record.domain_duration_years || 1} yr • ${record.domain_registrar ? escapeHtml(record.domain_registrar) : 'Vercel'}</div>
         </td>
         <td>${formatDate(record.domain_expiry_date)}</td>
         <td>${expiryBadge}</td>
