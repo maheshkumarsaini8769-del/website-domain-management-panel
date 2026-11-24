@@ -1229,7 +1229,8 @@ function openAddSoftwareModal() {
   document.getElementById('formSoftwareId').value = '';
   document.getElementById('softwareModalTitleText').textContent = 'Add New Software / App Record';
   document.getElementById('formSwCategory').value = 'Hotel Management ERP';
-  document.getElementById('formSwPaymentStatus').value = 'Paid';
+  document.getElementById('formSwPrice').value = 0;
+  document.getElementById('formSwPaymentStatus').value = 'In-House';
   openModal('softwareModal');
 }
 
