@@ -155,7 +155,13 @@
             <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
             <span>Dashboard Overview</span>
           </h2>
-          <span class="results-count-text">Live statistics from MongoDB Atlas</span>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="results-count-text">Live statistics from MongoDB Atlas</span>
+            <button class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.78rem;" id="toggleKpiBtn" onclick="toggleKpiSummary()" title="Toggle compact/expanded stats">
+              <svg id="kpiToggleIcon" class="icon icon-sm" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              <span id="kpiToggleText">Collapse Stats</span>
+            </button>
+          </div>
         </div>
 
         <div class="kpi-grid">

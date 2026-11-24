@@ -12,8 +12,8 @@ const { requireAuth } = require('./auth');
 // All website and dashboard routes require authentication
 router.use(requireAuth);
 
-// GET /api/websites/dashboard/stats
-router.get('/dashboard/stats', async (req, res) => {
+// GET /api/websites/dashboard & /api/websites/dashboard/stats
+router.get(['/dashboard', '/dashboard/stats'], async (req, res) => {
   try {
     const stats = await getDashboardStats();
     res.json(stats);

@@ -145,6 +145,13 @@ function handleHeaderAddClick() {
 // ==========================================
 
 async function checkAuthSession() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const queryToken = urlParams.get('token');
+  if (queryToken) {
+    localStorage.setItem('mgmt_token', queryToken);
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+  }
+
   const token = localStorage.getItem('mgmt_token');
   if (!token) {
     showLoginView();
@@ -237,8 +244,12 @@ function showAppView() {
   }
 
   loadDashboardStats();
-  loadWebsites();
-  loadSoftware();
+  if (window.location.hash === '#software') {
+    switchMainTab('software');
+  } else {
+    loadWebsites();
+    loadSoftware();
+  }
 }
 
 function togglePasswordVisibility(inputId, btn) {
@@ -1477,6 +1488,30 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==========================================
+// Dashboard KPI Toggle for Laptop Screens
+// ==========================================
+
+function toggleKpiSummary() {
+  const kpiGrid = document.querySelector('.kpi-grid');
+  const btnText = document.getElementById('kpiToggleText');
+  const btnIcon = document.getElementById('kpiToggleIcon');
+  if (!kpiGrid) return;
+
+  const isHidden = kpiGrid.style.display === 'none';
+  if (isHidden) {
+    kpiGrid.style.display = 'grid';
+    if (btnText) btnText.textContent = 'Collapse Stats';
+    if (btnIcon) btnIcon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+    localStorage.setItem('mgmt_kpi_collapsed', 'false');
+  } else {
+    kpiGrid.style.display = 'none';
+    if (btnText) btnText.textContent = 'Expand Stats';
+    if (btnIcon) btnIcon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+    localStorage.setItem('mgmt_kpi_collapsed', 'true');
+  }
+}
+
+// ==========================================
 // Theme Management
 // ==========================================
 
@@ -1508,6 +1543,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const savedViewMode = localStorage.getItem('mgmt_view_mode') || 'table';
   setViewMode(savedViewMode);
+
+  if (localStorage.getItem('mgmt_kpi_collapsed') === 'true') {
+    const kpiGrid = document.querySelector('.kpi-grid');
+    const btnText = document.getElementById('kpiToggleText');
+    const btnIcon = document.getElementById('kpiToggleIcon');
+    if (kpiGrid) kpiGrid.style.display = 'none';
+    if (btnText) btnText.textContent = 'Expand Stats';
+    if (btnIcon) btnIcon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+  }
 
   checkAuthSession();
 });
