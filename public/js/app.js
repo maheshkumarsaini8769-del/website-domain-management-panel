@@ -1535,6 +1535,12 @@ function updateThemeIcon(theme) {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const queryTheme = urlParams.get('theme');
+  if (queryTheme === 'light' || queryTheme === 'dark') {
+    localStorage.setItem('mgmt_theme', queryTheme);
+  }
+
   const savedTheme = localStorage.getItem('mgmt_theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
