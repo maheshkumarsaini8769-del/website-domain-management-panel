@@ -227,6 +227,10 @@ async function handleLogout() {
 function showLoginView() {
   document.getElementById('loginView').style.display = 'flex';
   document.getElementById('appView').style.display = 'none';
+  const u = document.getElementById('loginUsername');
+  const p = document.getElementById('loginPassword');
+  if (u) u.value = '';
+  if (p) p.value = '';
 }
 
 function showAppView() {
