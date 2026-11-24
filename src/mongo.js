@@ -222,7 +222,7 @@ async function connectDb() {
       await User.create({
         username: 'maheshsaini',
         password_hash: defaultHash,
-        is_default_password: true
+        is_default_password: false
       });
       console.log('[MongoDB] Initialized default admin user: maheshsaini');
     }

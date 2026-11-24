@@ -39,13 +39,17 @@ async function requireAuth(req, res, next) {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    let { username, password } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required.' });
     }
 
-    const user = await User.findOne({ username: username.trim() });
+    username = String(username).trim();
+    password = String(password).trim();
+
+    // Case-insensitive lookup for admin username
+    const user = await User.findOne({ username: new RegExp('^' + username + '$', 'i') });
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password.' });
     }
@@ -104,14 +108,18 @@ router.get('/me', requireAuth, (req, res) => {
 // POST /api/auth/change-password
 router.post('/change-password', requireAuth, async (req, res) => {
   try {
-    const { currentPassword, newPassword, confirmPassword } = req.body;
+    let { currentPassword, newPassword, confirmPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Current password and new password are required.' });
+    if (!newPassword || !String(newPassword).trim()) {
+      return res.status(400).json({ error: 'New password is required.' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+    currentPassword = currentPassword ? String(currentPassword).trim() : '';
+    newPassword = String(newPassword).trim();
+    confirmPassword = confirmPassword ? String(confirmPassword).trim() : '';
+
+    if (newPassword.length < 4) {
+      return res.status(400).json({ error: 'New password must be at least 4 characters long.' });
     }
 
     if (confirmPassword && newPassword !== confirmPassword) {
@@ -119,13 +127,16 @@ router.post('/change-password', requireAuth, async (req, res) => {
     }
 
     const user = await User.findById(req.user._id);
-    const passwordValid = bcrypt.compareSync(currentPassword, user.password_hash);
-    if (!passwordValid) {
-      return res.status(400).json({ error: 'Current password is incorrect.' });
+    if (!user) {
+      return res.status(404).json({ error: 'User account not found.' });
     }
 
-    if (currentPassword === newPassword) {
-      return res.status(400).json({ error: 'New password must be different from current password.' });
+    // If current password provided, verify it
+    if (currentPassword) {
+      const passwordValid = bcrypt.compareSync(currentPassword, user.password_hash);
+      if (!passwordValid) {
+        return res.status(400).json({ error: 'Current password is incorrect.' });
+      }
     }
 
     const newHash = bcrypt.hashSync(newPassword, 10);
@@ -134,10 +145,32 @@ router.post('/change-password', requireAuth, async (req, res) => {
     user.updated_at = new Date();
     await user.save();
 
-    res.json({ message: 'Password changed successfully in MongoDB! Default password warning cleared.' });
+    // Issue updated token
+    const token = jwt.sign(
+      { id: user._id.toString(), username: user.username },
+      JWT_SECRET,
+      { expiresIn: TOKEN_EXPIRY }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      message: 'Password updated successfully in MongoDB Atlas!',
+      token,
+      user: {
+        id: user._id.toString(),
+        username: user.username,
+        is_default_password: false
+      }
+    });
   } catch (err) {
     console.error('Change password error:', err);
-    res.status(500).json({ error: 'Failed to update password.' });
+    res.status(500).json({ error: 'Failed to update password in MongoDB.' });
   }
 });
 

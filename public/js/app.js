@@ -235,12 +235,6 @@ function showAppView() {
 
   if (state.user) {
     document.getElementById('headerUsername').textContent = state.user.username;
-    const banner = document.getElementById('defaultPasswordBanner');
-    if (state.user.is_default_password) {
-      banner.style.display = 'flex';
-    } else {
-      banner.style.display = 'none';
-    }
   }
 
   loadDashboardStats();
@@ -276,16 +270,16 @@ function openChangePasswordModal() {
 
 async function handleChangePassword(e) {
   e.preventDefault();
-  const currentPassword = document.getElementById('currPasswordInput').value;
-  const newPassword = document.getElementById('newPasswordInput').value;
-  const confirmPassword = document.getElementById('confirmPasswordInput').value;
+  const currentPassword = document.getElementById('currPasswordInput').value.trim();
+  const newPassword = document.getElementById('newPasswordInput').value.trim();
+  const confirmPassword = document.getElementById('confirmPasswordInput').value.trim();
   const alertBox = document.getElementById('passwordAlert');
   const submitBtn = document.getElementById('changePasswordBtn');
 
   alertBox.style.display = 'none';
 
-  if (newPassword.length < 6) {
-    alertBox.textContent = 'New password must be at least 6 characters long.';
+  if (!newPassword || newPassword.length < 4) {
+    alertBox.textContent = 'New password must be at least 4 characters long.';
     alertBox.style.display = 'block';
     return;
   }
@@ -308,10 +302,14 @@ async function handleChangePassword(e) {
 
     const data = await res.json();
     if (res.ok) {
-      showToast('Password updated in MongoDB Atlas! Default warning cleared.', 'success');
+      if (data.token) {
+        localStorage.setItem('mgmt_token', data.token);
+      }
+      if (data.user) {
+        state.user = data.user;
+      }
+      showToast('Password changed successfully! New password is now active.', 'success');
       closeModal('changePasswordModal');
-      document.getElementById('defaultPasswordBanner').style.display = 'none';
-      if (state.user) state.user.is_default_password = false;
     } else {
       alertBox.textContent = data.error || 'Failed to change password.';
       alertBox.style.display = 'block';
