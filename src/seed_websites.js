@@ -93,14 +93,16 @@ module.exports = [
   },
   {
     website_name: 'Sun Sky Tourisms & Travels',
-    website_url: 'https://sun-sky-tourisms.vercel.app',
+    website_url: 'https://sunskytourisms.in',
+    is_custom_domain: true,
+    domain_type: 'custom_domain',
     client_name: 'Sun Sky Tourisms & Travels',
     contact_info: 'info@sunskytourisms.in',
     website_built_date: '2024-02-01',
-    domain_purchase_date: '2026-11-24',
-    domain_registrar: 'Vercel (Custom Domain: sunskytourisms.in)',
+    domain_purchase_date: '2026-10-15',
+    domain_registrar: 'Namecheap',
     domain_duration_years: 1,
-    domain_expiry_date: '2027-11-24',
+    domain_expiry_date: '2027-10-15',
     total_price: 0,
     payment_received: 0,
     pending_amount: 0,
@@ -112,7 +114,7 @@ module.exports = [
     admin_access_given: true,
     admin_name: 'Sun Sky Manager',
     admin_given_date: '2026-11-24',
-    notes: 'Rajasthan desert safari, Jaipur royal forts, holiday tour booking portal.\nLive on Vercel: https://sun-sky-tourisms.vercel.app\nLocal Source: /home/mahesh/tour new'
+    notes: 'Rajasthan desert safari, Jaipur royal forts, holiday tour booking portal.\nReal Custom Domain: https://sunskytourisms.in\nVercel Hosted App: https://sun-sky-tourisms.vercel.app\nLocal Source: /home/mahesh/tour new'
   },
   {
     website_name: 'Thar Swad Desi Aachar',
