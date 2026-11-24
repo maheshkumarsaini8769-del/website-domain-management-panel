@@ -209,6 +209,9 @@ async function getDashboardStats() {
 
 // Connect & Seed Database
 async function connectDb() {
+  if (mongoose.connection && mongoose.connection.readyState >= 1) {
+    return;
+  }
   try {
     await mongoose.connect(MONGODB_URI, {
       serverSelectionTimeoutMS: 10000

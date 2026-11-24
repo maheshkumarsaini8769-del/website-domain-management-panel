@@ -23,9 +23,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
-app.use('/api/auth', authRouter);
-app.use('/api/websites', websitesRouter);
-app.use('/api/software', softwareRouter);
+app.use(['/api/auth', '/auth'], authRouter);
+app.use(['/api/websites', '/websites'], websitesRouter);
+app.use(['/api/software', '/software'], softwareRouter);
 
 // Fallback to index.html for any SPA web page requests
 app.use((req, res, next) => {
