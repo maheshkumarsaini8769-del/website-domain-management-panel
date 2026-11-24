@@ -228,7 +228,31 @@
             <div class="kpi-subtext">Websites stored in MongoDB</div>
           </div>
 
-          <!-- 2. For Sale -->
+          <!-- 2. Real Custom Domains -->
+          <div class="kpi-card" onclick="filterByQuickPill('real_domains')">
+            <div class="kpi-top">
+              <span class="kpi-label">Real Domains</span>
+              <div class="kpi-icon-box green">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiRealDomains">0</div>
+            <div class="kpi-subtext">Paid .com / .in domains</div>
+          </div>
+
+          <!-- 3. Vercel Free Apps -->
+          <div class="kpi-card" onclick="filterByQuickPill('vercel_free')">
+            <div class="kpi-top">
+              <span class="kpi-label">Vercel Free</span>
+              <div class="kpi-icon-box slate">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="12 2 2 22 22 22"></polygon></svg>
+              </div>
+            </div>
+            <div class="kpi-value" id="kpiVercelApps">0</div>
+            <div class="kpi-subtext">Hosted on *.vercel.app (No domain)</div>
+          </div>
+
+          <!-- 4. For Sale -->
           <div class="kpi-card" onclick="filterByQuickPill('for_sale')">
             <div class="kpi-top">
               <span class="kpi-label">For Sale</span>
@@ -378,6 +402,12 @@
         <div class="filter-pills-row">
           <button class="filter-pill active" data-filter="all" onclick="filterByQuickPill('all')">
             All Websites <span class="pill-count" id="pillCountAll">0</span>
+          </button>
+          <button class="filter-pill" data-filter="real_domains" onclick="filterByQuickPill('real_domains')">
+            Real Domains <span class="pill-count" id="pillCountRealDomains">0</span>
+          </button>
+          <button class="filter-pill" data-filter="vercel_free" onclick="filterByQuickPill('vercel_free')">
+            Vercel Free <span class="pill-count" id="pillCountVercelFree">0</span>
           </button>
           <button class="filter-pill" data-filter="expiring_30" onclick="filterByQuickPill('expiring_30')">
             Expiring ≤ 30 Days <span class="pill-count" id="pillCountExpiring30">0</span>
@@ -633,6 +663,14 @@
           <div class="form-section-title">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             <span>2. Dates & Domain Expiry Tracking</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label class="form-label" for="formDomainType">Domain / Hosting Type</label>
+            <select id="formDomainType" class="form-select" onchange="onDomainTypeChange()">
+              <option value="vercel_free">Vercel Free Hosting (*.vercel.app - No Domain Bought)</option>
+              <option value="custom_domain">Real Custom Domain (.com / .in - Purchased Domain)</option>
+            </select>
           </div>
 
           <div class="form-grid-3">

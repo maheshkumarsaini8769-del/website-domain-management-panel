@@ -23,6 +23,8 @@ const WebsiteSchema = new mongoose.Schema({
   domain_registrar: { type: String, default: null },
   domain_duration_years: { type: Number, default: 1 },
   domain_expiry_date: { type: String, default: null },
+  is_custom_domain: { type: Boolean, default: false },
+  domain_type: { type: String, default: 'vercel_free' },
   total_price: { type: Number, default: 0 },
   payment_received: { type: Number, default: 0 },
   pending_amount: { type: Number, default: 0 },
@@ -113,10 +115,20 @@ function normalizeUrl(url) {
   return trimmed;
 }
 
+function isRealDomain(url, registrar) {
+  if (!url) return false;
+  const cleanUrl = url.toLowerCase().trim().replace(/^https?:\/\//, '');
+  if (cleanUrl.includes('.vercel.app')) {
+    return false;
+  }
+  return true;
+}
+
 function formatWebsiteDoc(doc) {
   if (!doc) return null;
   const obj = doc.toObject ? doc.toObject() : { ...doc };
-  const expiryInfo = computeExpiry(obj.domain_expiry_date);
+  const hasRealDomain = obj.is_custom_domain !== undefined ? Boolean(obj.is_custom_domain) : isRealDomain(obj.website_url, obj.domain_registrar);
+  const expiryInfo = hasRealDomain ? computeExpiry(obj.domain_expiry_date) : { days_remaining: null, expiry_status: 'Vercel Free' };
   const totalPrice = Number(obj.total_price) || 0;
   const paymentReceived = Number(obj.payment_received) || 0;
   const pendingAmount = Math.max(0, totalPrice - paymentReceived);
@@ -124,6 +136,8 @@ function formatWebsiteDoc(doc) {
   return {
     ...obj,
     id: obj._id ? obj._id.toString() : obj.id,
+    is_custom_domain: hasRealDomain,
+    domain_type: hasRealDomain ? 'custom_domain' : 'vercel_free',
     total_price: totalPrice,
     payment_received: paymentReceived,
     pending_amount: pendingAmount,
@@ -155,6 +169,8 @@ async function getDashboardStats() {
   const allRows = allDocs.map(formatWebsiteDoc);
 
   let total_websites = allRows.length;
+  let total_real_domains = 0;
+  let total_vercel_apps = 0;
   let total_for_sale = 0;
   let total_sold = 0;
   let total_payment_received = 0;
@@ -166,20 +182,25 @@ async function getDashboardStats() {
   let total_admin_access_not_given = 0;
 
   for (const item of allRows) {
+    if (item.is_custom_domain) {
+      total_real_domains++;
+      if (item.days_remaining !== null) {
+        if (item.days_remaining < 0) {
+          total_expired++;
+        } else if (item.days_remaining <= 30) {
+          total_expiring_30_days++;
+        } else {
+          total_active++;
+        }
+      }
+    } else {
+      total_vercel_apps++;
+    }
+
     if (item.sale_status === 'For Sale') total_for_sale++;
     if (item.sale_status === 'Sold') total_sold++;
     total_payment_received += item.payment_received || 0;
     total_pending_payment += item.pending_amount || 0;
-
-    if (item.days_remaining !== null) {
-      if (item.days_remaining < 0) {
-        total_expired++;
-      } else if (item.days_remaining <= 30) {
-        total_expiring_30_days++;
-      } else {
-        total_active++;
-      }
-    }
 
     if (item.admin_access_given) {
       total_admin_access_given++;
@@ -193,6 +214,8 @@ async function getDashboardStats() {
 
   return {
     total_websites,
+    total_real_domains,
+    total_vercel_apps,
     total_for_sale,
     total_sold,
     total_payment_received,
@@ -375,6 +398,7 @@ module.exports = {
   computeExpiry,
   calculateExpiryDate,
   normalizeUrl,
+  isRealDomain,
   formatWebsiteDoc,
   formatSoftwareAppDoc,
   getDashboardStats

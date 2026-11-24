@@ -979,6 +979,43 @@ select:-webkit-autofill {
 .badge-purple { background: var(--purple-subtle); color: var(--purple); }
 .badge-slate { background: var(--bg-surface-elevated); color: var(--text-secondary); border: 1px solid var(--border-default); }
 
+/* Domain Type Badges */
+.domain-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.domain-badge-pill.real {
+  background: var(--success-subtle);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.domain-badge-pill.vercel {
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+}
+
+.cell-url-link.real-domain {
+  background: rgba(16, 185, 129, 0.08);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.cell-url-link.vercel-app {
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
 /* Action Buttons inside Table */
 .action-buttons-cell {
   display: flex;

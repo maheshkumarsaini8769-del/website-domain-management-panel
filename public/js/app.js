@@ -339,6 +339,12 @@ async function loadDashboardStats() {
     state.dashboard = stats;
 
     document.getElementById('kpiTotalWebsites').textContent = stats.total_websites || 0;
+    if (document.getElementById('kpiRealDomains')) {
+      document.getElementById('kpiRealDomains').textContent = stats.total_real_domains || 0;
+    }
+    if (document.getElementById('kpiVercelApps')) {
+      document.getElementById('kpiVercelApps').textContent = stats.total_vercel_apps || 0;
+    }
     document.getElementById('kpiForSale').textContent = stats.total_for_sale || 0;
     document.getElementById('kpiSold').textContent = stats.total_sold || 0;
     document.getElementById('kpiPaymentReceived').textContent = formatINR(stats.total_payment_received || 0);
@@ -351,6 +357,12 @@ async function loadDashboardStats() {
     document.getElementById('kpiAdminNotGiven').textContent = stats.total_admin_access_not_given || 0;
 
     document.getElementById('pillCountAll').textContent = stats.total_websites || 0;
+    if (document.getElementById('pillCountRealDomains')) {
+      document.getElementById('pillCountRealDomains').textContent = stats.total_real_domains || 0;
+    }
+    if (document.getElementById('pillCountVercelFree')) {
+      document.getElementById('pillCountVercelFree').textContent = stats.total_vercel_apps || 0;
+    }
     document.getElementById('pillCountExpiring30').textContent = stats.total_expiring_30_days || 0;
     document.getElementById('pillCountExpired').textContent = stats.total_expired || 0;
     document.getElementById('pillCountActive').textContent = stats.total_active || 0;
@@ -471,7 +483,9 @@ async function loadWebsites() {
   const params = new URLSearchParams();
   if (search) params.append('search', search);
 
-  if (state.currentFilterPill === 'expiring_30') params.append('expiry_filter', 'expiring_30');
+  if (state.currentFilterPill === 'real_domains') params.append('expiry_filter', 'real_domains');
+  else if (state.currentFilterPill === 'vercel_free') params.append('expiry_filter', 'vercel_free');
+  else if (state.currentFilterPill === 'expiring_30') params.append('expiry_filter', 'expiring_30');
   else if (state.currentFilterPill === 'expired') params.append('expiry_filter', 'expired');
   else if (state.currentFilterPill === 'active') params.append('expiry_filter', 'active');
   else if (state.currentFilterPill === 'for_sale') params.append('sale_status', 'For Sale');
@@ -552,8 +566,12 @@ function renderRecords(records) {
   }
 
   tableBody.innerHTML = records.map(record => {
+    const isCustom = Boolean(record.is_custom_domain);
+
     let expiryBadge = '';
-    if (record.days_remaining === null) {
+    if (!isCustom) {
+      expiryBadge = '<span class="badge badge-slate"><span class="badge-dot" style="background:#94a3b8;"></span>Vercel Free</span>';
+    } else if (record.days_remaining === null) {
       expiryBadge = '<span class="badge badge-slate">No Expiry</span>';
     } else if (record.days_remaining < 0) {
       const daysAgo = Math.abs(record.days_remaining);
@@ -563,6 +581,20 @@ function renderRecords(records) {
     } else {
       expiryBadge = `<span class="badge badge-active"><span class="badge-dot"></span>Active (${record.days_remaining}d)</span>`;
     }
+
+    const domainTag = isCustom
+      ? '<span class="domain-badge-pill real" title="Real Purchased Domain (.com / .in)">Real Domain</span>'
+      : '<span class="domain-badge-pill vercel" title="Free Vercel Subdomain (*.vercel.app - No Domain Bought)">Vercel App</span>';
+
+    const purchaseCell = isCustom
+      ? `<div>${formatDate(record.domain_purchase_date)}</div>
+         <div class="cell-client-subtext cell-registrar-text" title="${record.domain_registrar ? escapeHtml(record.domain_registrar) : ''}">${record.domain_duration_years || 1} yr • ${record.domain_registrar ? escapeHtml(record.domain_registrar) : 'GoDaddy'}</div>`
+      : `<div style="font-size: 0.77rem; color: var(--text-muted); font-weight: 500;">Free Hosting</div>
+         <div class="cell-client-subtext" style="color: var(--text-muted);">No Domain Bought</div>`;
+
+    const expiryCell = isCustom
+      ? `<div>${formatDate(record.domain_expiry_date)}</div>`
+      : `<span style="font-size: 0.76rem; color: var(--text-muted);">No Expiry (Free)</span>`;
 
     let saleBadge = '';
     if (record.sale_status === 'For Sale') {
@@ -583,21 +615,21 @@ function renderRecords(records) {
     return `
       <tr onclick="handleRowClick(event, '${record.id}')" class="clickable-row">
         <td>
-          <div class="cell-website-name">${escapeHtml(record.website_name)}</div>
+          <div class="cell-website-name" style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+            <span>${escapeHtml(record.website_name)}</span>
+            ${domainTag}
+          </div>
           <div class="cell-client-subtext">Client: ${escapeHtml(record.client_name)}</div>
         </td>
         <td>
-          <a href="${escapeHtml(record.website_url)}" target="_blank" rel="noopener noreferrer" class="cell-url-link" title="Open ${escapeHtml(record.website_url)} in new tab">
+          <a href="${escapeHtml(record.website_url)}" target="_blank" rel="noopener noreferrer" class="cell-url-link ${isCustom ? 'real-domain' : 'vercel-app'}" title="Open ${escapeHtml(record.website_url)} in new tab">
             <span>${escapeHtml(record.website_url.replace(/^https?:\/\//i, ''))}</span>
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           </a>
         </td>
         <td>${formatDate(record.website_built_date)}</td>
-        <td>
-          <div>${formatDate(record.domain_purchase_date)}</div>
-          <div class="cell-client-subtext cell-registrar-text" title="${record.domain_registrar ? escapeHtml(record.domain_registrar) : ''}">${record.domain_duration_years || 1} yr • ${record.domain_registrar ? escapeHtml(record.domain_registrar) : 'Vercel'}</div>
-        </td>
-        <td>${formatDate(record.domain_expiry_date)}</td>
+        <td>${purchaseCell}</td>
+        <td>${expiryCell}</td>
         <td>${expiryBadge}</td>
         <td><span class="cell-currency received">${formatINR(record.payment_received)}</span></td>
         <td><span class="${pendingClass}">${pendingDisplay}</span></td>
@@ -621,8 +653,12 @@ function renderRecords(records) {
   }).join('');
 
   cardsContainer.innerHTML = records.map(record => {
+    const isCustom = Boolean(record.is_custom_domain);
+
     let expiryBadge = '';
-    if (record.days_remaining === null) {
+    if (!isCustom) {
+      expiryBadge = '<span class="badge badge-slate"><span class="badge-dot" style="background:#94a3b8;"></span>Vercel Free</span>';
+    } else if (record.days_remaining === null) {
       expiryBadge = '<span class="badge badge-slate">No Expiry Date</span>';
     } else if (record.days_remaining < 0) {
       expiryBadge = `<span class="badge badge-danger">Expired (${Math.abs(record.days_remaining)}d ago)</span>`;
@@ -632,11 +668,18 @@ function renderRecords(records) {
       expiryBadge = `<span class="badge badge-active">Active (${record.days_remaining}d left)</span>`;
     }
 
+    const domainTag = isCustom
+      ? '<span class="domain-badge-pill real">Real Domain</span>'
+      : '<span class="domain-badge-pill vercel">Vercel Free</span>';
+
     return `
       <div class="site-card">
         <div class="site-card-header">
           <div>
-            <h4 class="site-card-title">${escapeHtml(record.website_name)}</h4>
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+              <h4 class="site-card-title">${escapeHtml(record.website_name)}</h4>
+              ${domainTag}
+            </div>
             <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
               Client: ${escapeHtml(record.client_name)}
             </div>
@@ -645,7 +688,7 @@ function renderRecords(records) {
         </div>
 
         <div>
-          <a href="${escapeHtml(record.website_url)}" target="_blank" rel="noopener noreferrer" class="cell-url-link">
+          <a href="${escapeHtml(record.website_url)}" target="_blank" rel="noopener noreferrer" class="cell-url-link ${isCustom ? 'real-domain' : 'vercel-app'}">
             <span>${escapeHtml(record.website_url.replace(/^https?:\/\//i, ''))}</span>
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
           </a>
@@ -657,8 +700,12 @@ function renderRecords(records) {
             <span class="meta-value">${formatDate(record.website_built_date)}</span>
           </div>
           <div class="meta-item">
-            <span class="meta-label">Expiry Date</span>
-            <span class="meta-value">${formatDate(record.domain_expiry_date)}</span>
+            <span class="meta-label">Domain Expiry</span>
+            <span class="meta-value">${isCustom ? formatDate(record.domain_expiry_date) : '<span style="color: var(--text-muted);">Free (No Expiry)</span>'}</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Domain / Host</span>
+            <span class="meta-value">${isCustom ? escapeHtml(record.domain_registrar || 'Custom Domain') : 'Vercel Free App'}</span>
           </div>
           <div class="meta-item">
             <span class="meta-label">Payment Received</span>
@@ -673,10 +720,6 @@ function renderRecords(records) {
           <div class="meta-item">
             <span class="meta-label">Sale Status</span>
             <span class="meta-value">${escapeHtml(record.sale_status)}</span>
-          </div>
-          <div class="meta-item">
-            <span class="meta-label">Admin Access</span>
-            <span class="meta-value">${record.admin_access_given ? 'Yes' : 'No'}</span>
           </div>
         </div>
 
@@ -724,13 +767,17 @@ function openAddModal() {
   document.getElementById('websiteForm').reset();
   document.getElementById('formWebsiteId').value = '';
   document.getElementById('modalTitleText').textContent = 'Add New Website Record';
-  document.getElementById('formDurationYears').value = 1;
+  if (document.getElementById('formDomainType')) {
+    document.getElementById('formDomainType').value = 'vercel_free';
+  }
+  document.getElementById('formDurationYears').value = 0;
   document.getElementById('formTotalPrice').value = 0;
   document.getElementById('formPaymentReceived').value = 0;
   document.getElementById('formPendingAmount').value = '₹0';
   document.getElementById('formSaleStatus').value = 'Not for Sale';
   document.getElementById('formAdminAccessGiven').value = '0';
 
+  onDomainTypeChange();
   onSaleStatusChange();
   onAdminAccessChange();
   updateLiveExpiryPreview();
@@ -752,10 +799,14 @@ async function openEditModal(id) {
     document.getElementById('formClientName').value = record.client_name || '';
     document.getElementById('formContactInfo').value = record.contact_info || '';
 
+    if (document.getElementById('formDomainType')) {
+      document.getElementById('formDomainType').value = record.is_custom_domain ? 'custom_domain' : 'vercel_free';
+    }
+
     document.getElementById('formBuiltDate').value = record.website_built_date || '';
     document.getElementById('formPurchaseDate').value = record.domain_purchase_date || '';
     document.getElementById('formRegistrar').value = record.domain_registrar || '';
-    document.getElementById('formDurationYears').value = record.domain_duration_years || 1;
+    document.getElementById('formDurationYears').value = record.domain_duration_years || (record.is_custom_domain ? 1 : 0);
     document.getElementById('formExpiryDate').value = record.domain_expiry_date || '';
 
     document.getElementById('formTotalPrice').value = record.total_price || 0;
@@ -773,6 +824,7 @@ async function openEditModal(id) {
 
     document.getElementById('formNotes').value = record.notes || '';
 
+    onDomainTypeChange();
     onPriceOrPaymentChange();
     onSaleStatusChange();
     onAdminAccessChange();
@@ -781,6 +833,40 @@ async function openEditModal(id) {
     openModal('websiteModal');
   } catch (err) {
     showToast('Failed to load website data for editing.', 'error');
+  }
+}
+
+function onDomainTypeChange() {
+  const typeSelect = document.getElementById('formDomainType');
+  if (!typeSelect) return;
+  const isCustom = typeSelect.value === 'custom_domain';
+  const regInput = document.getElementById('formRegistrar');
+  const durInput = document.getElementById('formDurationYears');
+  const expInput = document.getElementById('formExpiryDate');
+  const purInput = document.getElementById('formPurchaseDate');
+  const badge = document.getElementById('formLiveExpiryBadge');
+
+  if (!isCustom) {
+    if (!regInput.value || regInput.value === 'GoDaddy' || regInput.value === 'Atak Domain') {
+      regInput.value = 'Vercel (Free Subdomain)';
+    }
+    durInput.value = 0;
+    durInput.disabled = true;
+    purInput.disabled = true;
+    expInput.disabled = true;
+    if (badge) {
+      badge.className = 'badge badge-slate';
+      badge.textContent = 'No Expiry (Free Vercel Hosting)';
+    }
+  } else {
+    durInput.disabled = false;
+    purInput.disabled = false;
+    expInput.disabled = false;
+    if (regInput.value.includes('Vercel')) {
+      regInput.value = 'GoDaddy';
+    }
+    if (durInput.value === '0') durInput.value = 1;
+    updateLiveExpiryPreview();
   }
 }
 
@@ -871,16 +957,21 @@ async function handleWebsiteSubmit(e) {
   const id = document.getElementById('formWebsiteId').value;
   const submitBtn = document.getElementById('formSubmitBtn');
 
+  const domainType = document.getElementById('formDomainType') ? document.getElementById('formDomainType').value : 'custom_domain';
+  const isCustomDomain = domainType === 'custom_domain';
+
   const payload = {
     website_name: document.getElementById('formWebsiteName').value.trim(),
     website_url: document.getElementById('formWebsiteUrl').value.trim(),
+    is_custom_domain: isCustomDomain,
+    domain_type: domainType,
     client_name: document.getElementById('formClientName').value.trim(),
     contact_info: document.getElementById('formContactInfo').value.trim() || null,
     website_built_date: document.getElementById('formBuiltDate').value || null,
-    domain_purchase_date: document.getElementById('formPurchaseDate').value || null,
-    domain_registrar: document.getElementById('formRegistrar').value.trim() || null,
-    domain_duration_years: parseInt(document.getElementById('formDurationYears').value, 10) || 1,
-    domain_expiry_date: document.getElementById('formExpiryDate').value || null,
+    domain_purchase_date: isCustomDomain ? (document.getElementById('formPurchaseDate').value || null) : null,
+    domain_registrar: document.getElementById('formRegistrar').value.trim() || (isCustomDomain ? null : 'Vercel (Free Subdomain)'),
+    domain_duration_years: isCustomDomain ? (parseInt(document.getElementById('formDurationYears').value, 10) || 1) : 0,
+    domain_expiry_date: isCustomDomain ? (document.getElementById('formExpiryDate').value || null) : null,
     total_price: parseFloat(document.getElementById('formTotalPrice').value) || 0,
     payment_received: parseFloat(document.getElementById('formPaymentReceived').value) || 0,
     payment_date: document.getElementById('formPaymentDate').value || null,
@@ -954,8 +1045,12 @@ async function viewWebsiteDetails(id) {
       openDeleteConfirm(record.id || record._id, record.website_name, 'website');
     };
 
+    const isCustom = Boolean(record.is_custom_domain);
+
     let expiryBadge = '';
-    if (record.days_remaining === null) {
+    if (!isCustom) {
+      expiryBadge = '<span class="badge badge-slate"><span class="badge-dot" style="background:#94a3b8;"></span>Vercel Free Hosting</span>';
+    } else if (record.days_remaining === null) {
       expiryBadge = '<span class="badge badge-slate">No Expiry Date</span>';
     } else if (record.days_remaining < 0) {
       expiryBadge = `<span class="badge badge-danger"><span class="badge-dot"></span>Expired (${Math.abs(record.days_remaining)} days ago)</span>`;
@@ -964,6 +1059,10 @@ async function viewWebsiteDetails(id) {
     } else {
       expiryBadge = `<span class="badge badge-active"><span class="badge-dot"></span>Active (${record.days_remaining} days left)</span>`;
     }
+
+    const domainTypeBadge = isCustom
+      ? '<span class="badge badge-active" style="font-size: 0.75rem;"><span class="badge-dot"></span>Real Custom Domain</span>'
+      : '<span class="badge badge-slate" style="font-size: 0.75rem;"><span class="badge-dot" style="background:#94a3b8;"></span>Vercel Free App (No Domain Bought)</span>';
 
     let saleBadge = '';
     if (record.sale_status === 'For Sale') {
@@ -982,6 +1081,7 @@ async function viewWebsiteDetails(id) {
           <div style="flex: 1; min-width: 260px;">
             <div class="detail-hero-title-row">
               <h3 class="detail-hero-name">${escapeHtml(record.website_name)}</h3>
+              ${domainTypeBadge}
               ${expiryBadge}
               ${saleBadge}
             </div>
@@ -1009,24 +1109,28 @@ async function viewWebsiteDetails(id) {
             </div>
             <div class="detail-kv-grid">
               <div class="detail-kv-item">
+                <span class="detail-k">Domain / Hosting Type</span>
+                <span class="detail-v highlight">${isCustom ? 'Real Purchased Domain (.com / .in)' : 'Vercel Free Subdomain (*.vercel.app)'}</span>
+              </div>
+              <div class="detail-kv-item">
                 <span class="detail-k">Registrar / Provider</span>
-                <span class="detail-v highlight">${record.domain_registrar ? escapeHtml(record.domain_registrar) : 'Vercel (Free Domain)'}</span>
+                <span class="detail-v ${isCustom ? 'highlight' : ''}">${isCustom ? escapeHtml(record.domain_registrar || 'GoDaddy / Atak') : 'Vercel Platform (Free Hosting)'}</span>
               </div>
               <div class="detail-kv-item">
                 <span class="detail-k">Duration Period</span>
-                <span class="detail-v">${record.domain_duration_years || 1} Year(s)</span>
+                <span class="detail-v">${isCustom ? (record.domain_duration_years || 1) + ' Year(s)' : 'Free Subdomain (Lifetime)'}</span>
               </div>
               <div class="detail-kv-item">
                 <span class="detail-k">Domain Purchase Date</span>
-                <span class="detail-v">${formatDate(record.domain_purchase_date)}</span>
+                <span class="detail-v">${isCustom ? formatDate(record.domain_purchase_date) : 'N/A (Free Subdomain)'}</span>
               </div>
               <div class="detail-kv-item">
                 <span class="detail-k">Domain Expiry Date</span>
-                <span class="detail-v">${formatDate(record.domain_expiry_date)}</span>
+                <span class="detail-v">${isCustom ? formatDate(record.domain_expiry_date) : 'Never (Free Subdomain)'}</span>
               </div>
               <div class="detail-kv-item">
                 <span class="detail-k">Days Remaining</span>
-                <span class="detail-v">${record.days_remaining !== null ? record.days_remaining + ' Days' : 'No Expiry'}</span>
+                <span class="detail-v">${isCustom && record.days_remaining !== null ? record.days_remaining + ' Days' : 'No Expiry (Free)'}</span>
               </div>
               <div class="detail-kv-item">
                 <span class="detail-k">Website Built Date</span>

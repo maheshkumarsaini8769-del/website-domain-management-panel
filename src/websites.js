@@ -5,7 +5,8 @@ const {
   getDashboardStats,
   formatWebsiteDoc,
   normalizeUrl,
-  calculateExpiryDate
+  calculateExpiryDate,
+  isRealDomain
 } = require('./mongo');
 const { requireAuth } = require('./auth');
 
@@ -74,14 +75,18 @@ router.get('/', async (req, res) => {
       });
     }
 
-    // Filter: Expiry status
+    // Filter: Expiry & Domain status
     if (expiry_filter && expiry_filter !== 'all') {
-      if (expiry_filter === 'expiring_30') {
-        records = records.filter(item => item.days_remaining !== null && item.days_remaining >= 0 && item.days_remaining <= 30);
+      if (expiry_filter === 'real_domains') {
+        records = records.filter(item => item.is_custom_domain);
+      } else if (expiry_filter === 'vercel_free') {
+        records = records.filter(item => !item.is_custom_domain);
+      } else if (expiry_filter === 'expiring_30') {
+        records = records.filter(item => item.is_custom_domain && item.days_remaining !== null && item.days_remaining >= 0 && item.days_remaining <= 30);
       } else if (expiry_filter === 'expired') {
-        records = records.filter(item => item.days_remaining !== null && item.days_remaining < 0);
+        records = records.filter(item => item.is_custom_domain && item.days_remaining !== null && item.days_remaining < 0);
       } else if (expiry_filter === 'active') {
-        records = records.filter(item => item.days_remaining !== null && item.days_remaining > 30);
+        records = records.filter(item => item.is_custom_domain && item.days_remaining !== null && item.days_remaining > 30);
       }
     }
 
@@ -286,22 +291,41 @@ router.post('/', async (req, res) => {
     const numPaymentReceived = Math.max(0, parseFloat(payment_received) || 0);
     const numPending = Math.max(0, numTotalPrice - numPaymentReceived);
 
-    let finalExpiryDate = domain_expiry_date ? domain_expiry_date.trim() : '';
-    if (!finalExpiryDate && domain_purchase_date) {
-      finalExpiryDate = calculateExpiryDate(domain_purchase_date, domain_duration_years);
-    }
-
     const cleanUrl = normalizeUrl(website_url);
+    const isCustom = req.body.is_custom_domain !== undefined
+      ? Boolean(req.body.is_custom_domain)
+      : isRealDomain(cleanUrl, domain_registrar);
+
+    let finalExpiryDate = null;
+    let finalRegistrar = domain_registrar ? domain_registrar.trim() : null;
+    let finalDurationYears = parseInt(domain_duration_years, 10) || 1;
+    let finalPurchaseDate = domain_purchase_date || null;
+
+    if (isCustom) {
+      finalExpiryDate = domain_expiry_date ? domain_expiry_date.trim() : '';
+      if (!finalExpiryDate && finalPurchaseDate) {
+        finalExpiryDate = calculateExpiryDate(finalPurchaseDate, finalDurationYears);
+      }
+    } else {
+      finalDurationYears = 0;
+      finalExpiryDate = null;
+      finalPurchaseDate = null;
+      if (!finalRegistrar) {
+        finalRegistrar = 'Vercel (Free Subdomain)';
+      }
+    }
 
     const newDoc = await Website.create({
       website_name: website_name.trim(),
       website_url: cleanUrl,
+      is_custom_domain: isCustom,
+      domain_type: isCustom ? 'custom_domain' : 'vercel_free',
       client_name: client_name.trim(),
       contact_info: contact_info ? contact_info.trim() : null,
       website_built_date: website_built_date || null,
-      domain_purchase_date: domain_purchase_date || null,
-      domain_registrar: domain_registrar ? domain_registrar.trim() : null,
-      domain_duration_years: parseInt(domain_duration_years, 10) || 1,
+      domain_purchase_date: isCustom ? finalPurchaseDate : null,
+      domain_registrar: finalRegistrar,
+      domain_duration_years: finalDurationYears,
       domain_expiry_date: finalExpiryDate || null,
       total_price: numTotalPrice,
       payment_received: numPaymentReceived,
@@ -375,20 +399,39 @@ router.put('/:id', async (req, res) => {
     const numPending = Math.max(0, numTotalPrice - numPaymentReceived);
 
     const cleanUrl = normalizeUrl(website_url);
+    const isCustom = req.body.is_custom_domain !== undefined
+      ? Boolean(req.body.is_custom_domain)
+      : isRealDomain(cleanUrl, domain_registrar);
 
-    let finalExpiry = domain_expiry_date;
-    if (!finalExpiry && domain_purchase_date) {
-      finalExpiry = calculateExpiryDate(domain_purchase_date, domain_duration_years || existing.domain_duration_years);
+    let finalExpiry = null;
+    let finalDurationYears = parseInt(domain_duration_years !== undefined ? domain_duration_years : existing.domain_duration_years, 10) || 1;
+    let finalPurchaseDate = domain_purchase_date !== undefined ? domain_purchase_date : existing.domain_purchase_date;
+    let finalRegistrar = domain_registrar ? domain_registrar.trim() : existing.domain_registrar;
+
+    if (isCustom) {
+      finalExpiry = domain_expiry_date !== undefined ? domain_expiry_date : existing.domain_expiry_date;
+      if (!finalExpiry && finalPurchaseDate) {
+        finalExpiry = calculateExpiryDate(finalPurchaseDate, finalDurationYears);
+      }
+    } else {
+      finalDurationYears = 0;
+      finalExpiry = null;
+      finalPurchaseDate = null;
+      if (!finalRegistrar || finalRegistrar === 'Atak Domain' || finalRegistrar === 'GoDaddy') {
+        finalRegistrar = 'Vercel (Free Subdomain)';
+      }
     }
 
     existing.website_name = website_name.trim();
     existing.website_url = cleanUrl;
+    existing.is_custom_domain = isCustom;
+    existing.domain_type = isCustom ? 'custom_domain' : 'vercel_free';
     existing.client_name = client_name.trim();
     existing.contact_info = contact_info ? contact_info.trim() : null;
     existing.website_built_date = website_built_date || null;
-    existing.domain_purchase_date = domain_purchase_date || null;
-    existing.domain_registrar = domain_registrar ? domain_registrar.trim() : null;
-    existing.domain_duration_years = parseInt(domain_duration_years, 10) || 1;
+    existing.domain_purchase_date = isCustom ? finalPurchaseDate : null;
+    existing.domain_registrar = finalRegistrar;
+    existing.domain_duration_years = finalDurationYears;
     existing.domain_expiry_date = finalExpiry || null;
     existing.total_price = numTotalPrice;
     existing.payment_received = numPaymentReceived;
