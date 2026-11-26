@@ -74,7 +74,7 @@ router.post('/login', async (req, res) => {
     });
 
     res.json({
-      message: 'Login successful via MongoDB Atlas',
+      message: 'Login successful',
       token,
       user: {
         id: user._id.toString(),
@@ -160,7 +160,7 @@ router.post('/change-password', requireAuth, async (req, res) => {
     });
 
     res.json({
-      message: 'Password updated successfully in MongoDB Atlas!',
+      message: 'Password updated successfully!',
       token,
       user: {
         id: user._id.toString(),
@@ -170,7 +170,7 @@ router.post('/change-password', requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error('Change password error:', err);
-    res.status(500).json({ error: 'Failed to update password in MongoDB.' });
+    res.status(500).json({ error: 'Failed to update password.' });
   }
 });
 

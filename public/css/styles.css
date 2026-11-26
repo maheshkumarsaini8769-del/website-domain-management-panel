@@ -1607,8 +1607,18 @@ select:-webkit-autofill {
   border-color: #d3dbe8;
 }
 
-[data-theme="light"] .nav-tab-btn {
+[data-theme="light"] .nav-tab-btn:not(.active) {
   color: #475569;
+}
+
+[data-theme="light"] .nav-tab-btn.active {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .nav-tab-btn.active svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
 }
 
 [data-theme="light"] .nav-tab-btn:hover:not(.active) {
@@ -1625,8 +1635,14 @@ select:-webkit-autofill {
 
 [data-theme="light"] .nav-tab-btn.active .nav-tab-badge,
 [data-theme="light"] .filter-pill.active .pill-count {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="light"] .db-status-pill {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
 }
 
 [data-theme="light"] .user-badge {

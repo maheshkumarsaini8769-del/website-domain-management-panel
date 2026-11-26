@@ -344,7 +344,7 @@ router.post('/', async (req, res) => {
     });
 
     res.status(201).json({
-      message: 'Website record created successfully in MongoDB Atlas!',
+      message: 'Website record created successfully!',
       record: formatWebsiteDoc(newDoc)
     });
   } catch (err) {
@@ -450,7 +450,7 @@ router.put('/:id', async (req, res) => {
     await existing.save();
 
     res.json({
-      message: 'Website record updated successfully in MongoDB Atlas!',
+      message: 'Website record updated successfully!',
       record: formatWebsiteDoc(existing)
     });
   } catch (err) {
@@ -468,7 +468,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     await Website.findByIdAndDelete(req.params.id);
-    res.json({ message: `Record for "${existing.website_name}" deleted successfully from MongoDB Atlas.` });
+    res.json({ message: `Record for "${existing.website_name}" deleted successfully.` });
   } catch (err) {
     console.error('Error deleting website:', err);
     res.status(500).json({ error: 'Failed to delete record.' });

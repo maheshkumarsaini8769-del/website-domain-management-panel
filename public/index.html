@@ -137,7 +137,7 @@
         </div>
         <div>
           <h1 class="brand-title">Website, Domain & Software Panel</h1>
-          <p class="brand-subtitle">MongoDB Atlas • Expiry Tracking • Payment Records • Hotel Software & APKs</p>
+          <p class="brand-subtitle">Expiry Tracking • Payment Records • Hotel Software & APKs</p>
         </div>
       </div>
 
@@ -168,7 +168,7 @@
       </div>
     </header>
 
-    <!-- Main Navigation Bar: Tabs + MongoDB Atlas Status -->
+    <!-- Main Navigation Bar: Tabs + Database Status -->
     <div class="main-nav-bar">
       <div class="main-nav-tabs">
         <button id="navTabWebsites" class="nav-tab-btn active" onclick="switchMainTab('websites')">
@@ -185,9 +185,9 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 0.6rem;">
-        <div class="db-status-pill" title="Live Cluster: cluster0.ajeqt1u.mongodb.net (Database: website_domain_panel)">
+        <div class="db-status-pill" title="Live Database Status: Connected & Online">
           <span class="db-status-dot"></span>
-          <span>MongoDB Atlas Connected</span>
+          <span>Database Connected</span>
         </div>
       </div>
     </div>
@@ -207,7 +207,7 @@
             <span>Dashboard Overview</span>
           </h2>
           <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <span class="results-count-text">Live statistics from MongoDB Atlas</span>
+            <span class="results-count-text">Live Database Overview</span>
             <button class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.78rem;" id="toggleKpiBtn" onclick="toggleKpiSummary()" title="Toggle compact/expanded stats">
               <svg id="kpiToggleIcon" class="icon icon-sm" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></svg>
               <span id="kpiToggleText">Collapse Stats</span>
@@ -225,7 +225,7 @@
               </div>
             </div>
             <div class="kpi-value" id="kpiTotalWebsites">0</div>
-            <div class="kpi-subtext">Websites stored in MongoDB</div>
+            <div class="kpi-subtext">Total recorded websites</div>
           </div>
 
           <!-- 2. Real Custom Domains -->
@@ -803,7 +803,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('websiteModal')">Cancel</button>
           <button type="submit" id="formSubmitBtn" class="btn btn-primary">
-            <span>Save to MongoDB Atlas</span>
+            <span>Save Website Record</span>
           </button>
         </div>
       </form>
@@ -958,7 +958,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('softwareModal')">Cancel</button>
           <button type="submit" id="formSwSubmitBtn" class="btn btn-primary">
-            <span>Save Software to MongoDB</span>
+            <span>Save Software Record</span>
           </button>
         </div>
       </form>
@@ -1075,7 +1075,7 @@
           Are you sure you want to delete <strong id="deleteTargetName">this record</strong>?
         </p>
         <p style="font-size: 0.85rem; color: var(--text-secondary);">
-          This will permanently remove the record from MongoDB Atlas. This action cannot be undone.
+          This will permanently remove the record from the database. This action cannot be undone.
         </p>
       </div>
 

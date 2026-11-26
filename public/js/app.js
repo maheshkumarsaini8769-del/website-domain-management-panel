@@ -1,6 +1,6 @@
 /**
  * Website, Domain & Software Management Panel - Client Application
- * Database: MongoDB Atlas
+ * Database: Cloud Database
  */
 
 // State
@@ -182,7 +182,7 @@ async function handleLogin(e) {
 
   alertBox.style.display = 'none';
   submitBtn.disabled = true;
-  submitBtn.innerHTML = 'Connecting to MongoDB Atlas...';
+  submitBtn.innerHTML = 'Signing in...';
 
   try {
     const res = await fetch('/api/auth/login', {
@@ -198,7 +198,7 @@ async function handleLogin(e) {
     if (res.ok) {
       localStorage.setItem('mgmt_token', data.token);
       state.user = data.user;
-      showToast('Welcome back, ' + data.user.username + '! Connected to MongoDB Atlas.', 'success');
+      showToast('Welcome back, ' + data.user.username + '! Connected successfully.', 'success');
       showAppView();
     } else {
       alertBox.textContent = data.error || 'Login failed. Please check credentials.';
@@ -295,7 +295,7 @@ async function handleChangePassword(e) {
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Updating MongoDB...';
+  submitBtn.textContent = 'Updating Password...';
 
   try {
     const res = await fetch('/api/auth/change-password', {
@@ -516,7 +516,7 @@ async function loadWebsites() {
     renderRecords(data.records);
   } catch (err) {
     console.error('Error fetching websites:', err);
-    showToast('Failed to retrieve website records from MongoDB.', 'error');
+    showToast('Failed to retrieve website records.', 'error');
   }
 }
 
@@ -549,7 +549,7 @@ function renderRecords(records) {
       document.getElementById('emptyStateTitle').textContent = 'No matching records found';
       document.getElementById('emptyStateDesc').textContent = 'Try adjusting your search terms or resetting filters.';
     } else {
-      document.getElementById('emptyStateTitle').textContent = 'No website records in MongoDB';
+      document.getElementById('emptyStateTitle').textContent = 'No website records recorded';
       document.getElementById('emptyStateDesc').textContent = 'Store websites, domains, payment amounts, and track expiry dates seamlessly.';
     }
     return;
@@ -991,7 +991,7 @@ async function handleWebsiteSubmit(e) {
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Saving to MongoDB...';
+  submitBtn.textContent = 'Saving...';
 
   try {
     const url = id ? `/api/websites/${id}` : '/api/websites';
@@ -1005,7 +1005,7 @@ async function handleWebsiteSubmit(e) {
 
     const data = await res.json();
     if (res.ok) {
-      showToast(id ? 'Website record updated in MongoDB Atlas!' : 'Website saved to MongoDB Atlas!', 'success');
+      showToast(id ? 'Website record updated successfully!' : 'Website saved successfully!', 'success');
       closeModal('websiteModal');
       loadDashboardStats();
       loadWebsites();
@@ -1016,7 +1016,7 @@ async function handleWebsiteSubmit(e) {
     showToast('Server error while saving.', 'error');
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Save to MongoDB Atlas';
+    submitBtn.textContent = 'Save Website Record';
   }
 }
 
@@ -1213,7 +1213,7 @@ async function viewWebsiteDetails(id) {
               ${record.notes ? escapeHtml(record.notes) : 'No notes added.'}
             </div>
             <div class="detail-storage-tag">
-              <span class="badge badge-active"><span class="badge-dot"></span>MongoDB Atlas Cloud (cluster0)</span>
+              <span class="badge badge-active"><span class="badge-dot"></span>Cloud Database Active</span>
             </div>
           </div>
 
@@ -1276,7 +1276,7 @@ async function loadSoftware() {
     renderSoftware(data.records);
   } catch (err) {
     console.error('Error fetching software:', err);
-    showToast('Failed to load software & apps from MongoDB.', 'error');
+    showToast('Failed to load software & apps.', 'error');
   }
 }
 
@@ -1440,7 +1440,7 @@ async function handleSoftwareSubmit(e) {
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Saving to MongoDB...';
+  submitBtn.textContent = 'Saving...';
 
   try {
     const url = id ? `/api/software/${id}` : '/api/software';
@@ -1454,7 +1454,7 @@ async function handleSoftwareSubmit(e) {
 
     const data = await res.json();
     if (res.ok) {
-      showToast(id ? 'Software record updated in MongoDB!' : 'Software record saved in MongoDB!', 'success');
+      showToast(id ? 'Software record updated successfully!' : 'Software record saved successfully!', 'success');
       closeModal('softwareModal');
       loadSoftware();
       loadDashboardStats();
@@ -1465,7 +1465,7 @@ async function handleSoftwareSubmit(e) {
     showToast('Server error while saving.', 'error');
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Save Software to MongoDB';
+    submitBtn.textContent = 'Save Software Record';
   }
 }
 
@@ -1541,7 +1541,7 @@ async function viewSoftwareDetails(id) {
 
       <div class="detail-card">
         <div class="detail-card-label">Database Storage</div>
-        <div class="detail-card-value" style="font-size: 0.8rem; color: var(--success);">MongoDB Atlas (cluster0.ajeqt1u.mongodb.net)</div>
+        <div class="detail-card-value" style="font-size: 0.8rem; color: var(--success);">Cloud Database (Synced)</div>
       </div>
     `;
 
@@ -1567,7 +1567,7 @@ async function executeDelete() {
   if (!state.deleteTargetId) return;
   const btn = document.getElementById('confirmDeleteBtn');
   btn.disabled = true;
-  btn.textContent = 'Deleting from MongoDB...';
+  btn.textContent = 'Deleting...';
 
   try {
     const url = state.deleteTargetType === 'website'
@@ -1581,7 +1581,7 @@ async function executeDelete() {
 
     const data = await res.json();
     if (res.ok) {
-      showToast(data.message || 'Deleted successfully from MongoDB Atlas.', 'success');
+      showToast(data.message || 'Deleted successfully.', 'success');
       closeModal('deleteConfirmModal');
       loadDashboardStats();
       if (state.deleteTargetType === 'website') {
@@ -1663,7 +1663,7 @@ function toggleKpiSummary() {
 // ==========================================
 
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
   const target = current === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', target);
   localStorage.setItem('mgmt_theme', target);
@@ -1690,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('mgmt_theme', queryTheme);
   }
 
-  const savedTheme = localStorage.getItem('mgmt_theme') || 'dark';
+  const savedTheme = localStorage.getItem('mgmt_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
 
