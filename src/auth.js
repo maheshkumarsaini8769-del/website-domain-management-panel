@@ -48,13 +48,22 @@ router.post('/login', async (req, res) => {
     username = String(username).trim();
     password = String(password).trim();
 
-    // Case-insensitive lookup for admin username
-    const user = await User.findOne({ username: new RegExp('^' + username + '$', 'i') });
+    // Flexible case-insensitive lookup (supports "maheshsaini" and "mahesh saini")
+    const cleanUsername = username.replace(/\s+/g, '');
+    const user = await User.findOne({
+      $or: [
+        { username: new RegExp('^' + username + '$', 'i') },
+        { username: new RegExp('^' + cleanUsername + '$', 'i') }
+      ]
+    });
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password.' });
     }
 
-    const passwordValid = bcrypt.compareSync(password, user.password_hash);
+    let passwordValid = bcrypt.compareSync(password, user.password_hash);
+    if (!passwordValid) {
+      passwordValid = bcrypt.compareSync(password.replace(/\s+/g, ''), user.password_hash);
+    }
     if (!passwordValid) {
       return res.status(401).json({ error: 'Invalid username or password.' });
     }
